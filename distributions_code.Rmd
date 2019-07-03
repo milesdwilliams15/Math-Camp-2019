@@ -1,0 +1,73 @@
+---
+title: "Generating Data from Distributions"
+author: "Miles D. Williams"
+date: "July 3, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+play_data = 
+  tibble(
+    
+    # Make vector of length 1,000, with sequence going from -4 to 4
+    x = seq(-4,4,len=1000),
+    
+    # Get the probability density for a normal distribution centered at 0 over x
+    pdf = dnorm(x),
+    
+    # Get the cumulative distribution for a normal distribution centered at 0 over x
+    cdf = pnorm(x),
+    
+    # Generate random x values pulling from the normal distribution
+    random_x = rnorm(n = length(x))
+  ) 
+```
+
+
+```{r}
+play_data %>%
+  ggplot() +
+  aes(
+    x = x,
+    y = pdf
+  ) +
+  geom_line() +
+  theme_minimal()
+```
+
+```{r}
+play_data %>%
+  ggplot() +
+  aes(
+    x = x,
+    y = cdf
+  ) +
+  geom_line() +
+  theme_minimal()
+```
+
+```{r}
+play_data %>%
+  ggplot() + 
+  aes(
+    x = random_x
+  ) +
+  geom_histogram(bins = 15) +
+  theme_minimal()
+```
+
+```{r}
+play_data %>%
+  ggplot() +
+  aes(
+    x = random_x
+  ) +
+  geom_density(fill = "grey40") +
+  theme_minimal()
+```
+
