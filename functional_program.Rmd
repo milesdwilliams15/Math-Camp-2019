@@ -1,0 +1,172 @@
+---
+title: Functional Programming with `R`
+author: "Miles D. Williams"
+date: "2019 UIUC Political Science Math Camp"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Now that you've gained some familiarity with loops, let's add just another layer of complexity. This won't hurt too badly, I promise...
+
+`R` is a functional programming language. In short, that means that you can create your own functions in `R` that will do basically whatever you tell them to do. (Word to the wise, it will also do whatever stupid thing you tell it to do)
+
+This might seem like an odd feature. Why write a new function? `R` already comes with so many nice built-in functions; adding our own may appear silly.
+
+But, consider for a moment the value of the `for` loop. It allows you to automate an iterative task. It takes what would otherwise require 1,000 lines of code and condenses it to a mere handful. Functional programming allows you to do much the same thing. In fact, you can write functions that perform loops for you, without having to rewrite a loop each time you want to do an iterative task.
+
+Consider the following simple loop:
+
+```{r}
+
+# We first create a 10 x 10 matrix of zeros
+x = matrix(0, ncol = 10, nrow = 10)
+x # Show matrix
+
+# We then fill each column of this matrix with random variables, but
+# with the mean centered at a value equal to the column number,
+# e.g., for column 1, the mean of the random variable to be generated will be 1.
+
+# The loop:
+for(i in 1:ncol(x)){
+  x[,i] = rnorm(n = nrow(x), sd = 1, mean = i)
+}
+```
+
+Here's the output from the loop:
+
+```{r}
+x
+```
+
+Now let's say we want to be able to specify what the mean will be in each column, and for that matter the standard deviation:
+
+```{r}
+x = matrix(0, ncol = 10, nrow = 10)
+means = c(4,9,3,4,0,-1,8,6,2,5)
+sds = c(.3,8,9,.5,2,1,6,3,7,2)
+for(i in 1:ncol(x)){
+  x[,i] = rnorm(n = nrow(x), sd = sds[i], means[i])
+}
+x
+```
+
+Now, don't get me wrong, I love `R`, but writing all that out was tedious. I don't really want to rewrite all that every time I want to generate a matrix of random variables...functional programming to the rescue!
+
+`R` lets you write over a particular routine and save that routine as a function. This is done straightforwardly with the `function()` command. For example:
+
+```{r}
+# My mean function:
+my_mean = function(x){
+  x_bar = sum(x)/length(x)
+  return(x_bar)
+}
+
+# Let's take the mean of the first element of the x matrix
+my_mean(x[,1])
+
+# How does this compare with R's built-in mean funciton?
+mean(x[,1])
+```
+
+The basic outline of writing a function is simple:
+  
+  1. specify the name of the function you want to create:
+
+  - `my_mean =` (this can also be done with the longer `<-`)
+  
+  2. Use `function()` and place inside the object you want the function to work on:
+  
+  - `my_mean = function(x)` (x is just a stand-in for the variable we want to take the mean of)
+  
+  3. Then, in brackets, we specify the routine we want the function to automate:
+  
+  - `my_mean = function(x) { ... }`
+  
+  
+Pretty simple right? Can we apply this to the loop example above? Let's give it a go.
+
+```{r}
+random_mat = function(
+  n, # number of rows
+  k  # number of columns
+) {
+  
+  # Make empty n x k matrix
+  x = matrix(0, ncol = k, nrow = n)
+  
+  # Have routine pick a random mean per column
+  means = rnorm(n = k)
+  
+  # Have routine pick a random sd per column
+  sds = exp(rnorm(n = k))
+  
+  # Fill the matrix
+  for(i in 1:k){
+    x[,i] = rnorm(n = n, sd = sds[i], means[i])
+  }
+  
+  # Have the function return the filled matrix
+  return(x)
+}
+```
+
+Does it work? Set `n = 10` and `k = 3`:
+
+```{r}
+random_mat(n = 10, k = 3)
+```
+
+It works perfectly. 
+
+# Practice
+Now it's your turn. 
+
+  1. Complete the following routine with the correct line of code. Simply delete the `#` in front of the lines of code you think should be in the function. Explain.
+  
+```{r eval=F}
+# This function will plot multiple histograms for a matrix
+# of covariates. Which lines of code will correctly plot them?
+multi_hist = function(x) {
+  
+  #par(mfcol = c(1,nrow(x))) # Are these two lines correct?
+  #for(i in 1:nrow(x)){  
+    
+  #par(mfcol = c(1,ncol(x))) # Or are these two lines correct?
+  #for(i in 1:ncol(x)){
+    hist(x[,i],main=paste("Variable", i),xlab="Values")
+  }
+}
+
+# Test it
+multi_hist(x=random_mat(n = 100, k = 3))
+```
+
+  2. In applied settings, it is common to "standardize" variables. That is, to center covariates at 0 and scale them to what are called *standard deviation* units. The math for doing this is fairly simple. For a variable $x_n$: $\frac{x_n - \bar{x}}{\text{sd}(x_n)}$. In other words, for $n$ values of a random variable $x$, from each value subtract the mean of the variable then divide by the standard deviation of the variable. Finish the standardization function below:
+  
+```{r eval = F}
+stand = function(x){
+  # What goes here?
+}
+```
+
+  3. Using the `stand()` function you completed above, can you write a function around the following loop that standardizes each variable in a matrix?
+  
+```{r eval = F}
+
+# Make empty matrix
+stand_mat = matrix(0, ncol = ncol(x), nrow = nrow(x))
+
+# Use loop to fill matrix with standardized values
+for(k in 1:ncol(x)){
+  stand_mat[,k] = stand(x[,k])
+}
+
+```
+
+  
+  
+  
