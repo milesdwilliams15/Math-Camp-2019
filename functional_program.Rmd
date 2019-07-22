@@ -56,35 +56,35 @@ x
 
 Now, don't get me wrong, I love `R`, but writing all that out was tedious. I don't really want to rewrite all that every time I want to generate a matrix of random variables...functional programming to the rescue!
 
-`R` lets you write over a particular routine and save that routine as a function. This is done straightforwardly with the `function()` command. For example:
+`R` lets you write over a particular routine and save that routine as a function. This is done straightforwardly with the `function()` command. For example, consider the following coin tossing function:
 
 ```{r}
-# My mean function:
-my_mean = function(x){
-  x_bar = sum(x)/length(x)
-  return(x_bar)
+# My coin function:
+coin = function(tosses = 1){
+  out = sample(c("heads","tails"),replace = T, size = tosses)
+  return(out)
 }
 
-# Let's take the mean of the first element of the x matrix
-my_mean(x[,1])
+# Let's check out the output
+coin()
 
-# How does this compare with R's built-in mean funciton?
-mean(x[,1])
+# Let's take the mean number of heads after 10 tosses
+mean(coin(10)=="heads")
 ```
 
 The basic outline of writing a function is simple:
   
   1. specify the name of the function you want to create:
 
-  - `my_mean =` (this can also be done with the longer `<-`)
+  - `coin =` (this can also be done with the longer `<-`)
   
-  2. Use `function()` and place inside the object you want the function to work on:
+  2. Use `function()` and place inside the object you want the function to work on or commands you want to be able specify (you can also specify default options, e.g. `tosses = 1`:
   
-  - `my_mean = function(x)` (x is just a stand-in for the variable we want to take the mean of)
+  - `coin = function(tosses = 1)` 
   
   3. Then, in brackets, we specify the routine we want the function to automate:
   
-  - `my_mean = function(x) { ... }`
+  - `coin = function(tosses = 1) { ... }`
   
   
 Pretty simple right? Can we apply this to the loop example above? Let's give it a go.
@@ -122,51 +122,85 @@ random_mat(n = 10, k = 3)
 
 It works perfectly. 
 
-# Practice
-Now it's your turn. 
+Now, how about a dice rolling function?
 
-  1. Complete the following routine with the correct line of code. Simply delete the `#` in front of the lines of code you think should be in the function. Explain.
-  
-```{r eval=F}
-# This function will plot multiple histograms for a matrix
-# of covariates. Which lines of code will correctly plot them?
-multi_hist = function(x) {
-  
-  #par(mfcol = c(1,nrow(x))) # Are these two lines correct?
-  #for(i in 1:nrow(x)){  
-    
-  #par(mfcol = c(1,ncol(x))) # Or are these two lines correct?
-  #for(i in 1:ncol(x)){
-    hist(x[,i],main=paste("Variable", i),xlab="Values")
-  }
+```{r}
+dice = function(sides = 6, rolls = 1){
+  out = sum(sample(1:sides, replace = T, size = rolls))
+  return(out)
 }
 
 # Test it
-multi_hist(x=random_mat(n = 100, k = 3))
+dice(rolls = 10)
 ```
 
-  2. In applied settings, it is common to "standardize" variables. That is, to center covariates at 0 and scale them to what are called *standard deviation* units. The math for doing this is fairly simple. For a variable $x_n$: $\frac{x_n - \bar{x}}{\text{sd}(x_n)}$. In other words, for $n$ values of a random variable $x$, from each value subtract the mean of the variable then divide by the standard deviation of the variable. Finish the standardization function below:
-  
-```{r eval = F}
-stand = function(x){
-  # What goes here?
+```{r}
+outcomes = 0
+for(i in 1:1000){
+  outcomes[i] = dice(rolls = 10)
 }
+plot(density(outcomes))
 ```
 
-  3. Using the `stand()` function you completed above, can you write a function around the following loop that standardizes each variable in a matrix?
+
+# Practice
+
+
+Now it's your turn. 
+
+  1. Can you finish the function below for a routine that plots the mean number of heads per `1:n` number of tosses? As n gets bigger, the results should converge toward 0.5, but they don't. What do you need to fix in the below function to make it work correctly? Make the change and check the results (hint: the `i`s have it).
   
-```{r eval = F}
-
-# Make empty matrix
-stand_mat = matrix(0, ncol = ncol(x), nrow = nrow(x))
-
-# Use loop to fill matrix with standardized values
-for(k in 1:ncol(x)){
-  stand_mat[,k] = stand(x[,k])
+```{r, eval = F}
+plot_n_tosses = function(n = 1000){
+  means = 0
+  for(i in 1:n){
+    means[i] = mean(coin(n)=="heads")
+  }
+  plot(1:n,means,type="l",
+       xlab="n tosses",ylab="proportion heads")
+  abline(h=.5)
 }
-
+plot_n_tosses()
 ```
 
+  2. Applying the framework for `plot_n_tosses` in the previous problem, write a function called `plot_n_rolls` that plots the mean value you get going from 1 to n rolls of a die per die (hint: outcome = $\bar{x}/\text{rolls}$.
   
+```{r}
+plot_n_rolls = function(n = 1000){
+  means = 0
+  for(i in 1:n){
+    means[i] = mean(dice(rolls = i))/i
+  }
+  plot(1:n,means,type="l",
+       xlab="n rolls",ylab="mean value")
+  abline(h=3.5)
+}
+plot_n_rolls()
+```
+
+
+  3. You can use the `rbinom` function to generate random 0s and 1s from a binomial distribution. Below is a new coin function that returns heads or tails, but it differs from the previous coin function in that you can specify the probability that you get heads. With this new coin function, write a histogram function that plots the frequency you get a proportion of heads per 100 tosses.
+  
+```{r}
+coin2 = function(tosses = 1, bias = 0.5){
+  out = rbinom(n = tosses, size = 1, prob = bias)
+  out[out==1] = "heads"
+  out[out==0] = "tails"
+  return(out)
+}
+coin2(tosses = 50)
+```
+
+```{r}
+coin_hist = function(times = 100, tosses = 100, bias = 0.5){
+  result = 0
+  for(i in 1:times){
+    result[i] = mean(coin2(tosses = tosses, bias = bias)=="heads")
+  }
+  hist(result,main = paste0("tosses = ",tosses,"; iterations = ",times))
+}
+coin_hist(bias = .05, times = 1000)
+```
+
   
   
