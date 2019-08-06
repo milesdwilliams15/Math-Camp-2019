@@ -1,8 +1,10 @@
 ---
-title: Functional Programming with `R`
-author: "Miles D. Williams"
-date: "2019 UIUC Political Science Math Camp"
-output: html_document
+title: Functional Programming with R
+author: 
+  - "Miles D. Williams"
+  - "Stephen Mullins"
+date: "08/14/2019"
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -18,189 +20,117 @@ This might seem like an odd feature. Why write a new function? `R` already comes
 
 But, consider for a moment the value of the `for` loop. It allows you to automate an iterative task. It takes what would otherwise require 1,000 lines of code and condenses it to a mere handful. Functional programming allows you to do much the same thing. In fact, you can write functions that perform loops for you, without having to rewrite a loop each time you want to do an iterative task.
 
-Consider the following simple loop:
+# A Simple `coin_toss` Function
+Before getting too wild and crazy, let's start out with a very simple coin toss function. This function will be somewhat redundant, but it's sole purpose is only to demonstrate the basic logic of functional programming.
 
-```{r}
-
-# We first create a 10 x 10 matrix of zeros
-x = matrix(0, ncol = 10, nrow = 10)
-x # Show matrix
-
-# We then fill each column of this matrix with random variables, but
-# with the mean centered at a value equal to the column number,
-# e.g., for column 1, the mean of the random variable to be generated will be 1.
-
-# The loop:
-for(i in 1:ncol(x)){
-  x[,i] = rnorm(n = nrow(x), sd = 1, mean = i)
-}
-```
-
-Here's the output from the loop:
-
-```{r}
-x
-```
-
-Now let's say we want to be able to specify what the mean will be in each column, and for that matter the standard deviation:
-
-```{r}
-x = matrix(0, ncol = 10, nrow = 10)
-means = c(4,9,3,4,0,-1,8,6,2,5)
-sds = c(.3,8,9,.5,2,1,6,3,7,2)
-for(i in 1:ncol(x)){
-  x[,i] = rnorm(n = nrow(x), sd = sds[i], means[i])
-}
-x
-```
-
-Now, don't get me wrong, I love `R`, but writing all that out was tedious. I don't really want to rewrite all that every time I want to generate a matrix of random variables...functional programming to the rescue!
-
-`R` lets you write over a particular routine and save that routine as a function. This is done straightforwardly with the `function()` command. For example, consider the following coin tossing function:
-
-```{r}
-# My coin function:
-coin = function(tosses = 1){
-  out = sample(c("heads","tails"),replace = T, size = tosses)
-  return(out)
-}
-
-# Let's check out the output
-coin()
-
-# Let's take the mean number of heads after 10 tosses
-mean(coin(10)=="heads")
-```
-
-The basic outline of writing a function is simple:
-  
-  1. specify the name of the function you want to create:
-
-  - `coin =` (this can also be done with the longer `<-`)
-  
-  2. Use `function()` and place inside the object you want the function to work on or commands you want to be able specify (you can also specify default options, e.g. `tosses = 1`:
-  
-  - `coin = function(tosses = 1)` 
-  
-  3. Then, in brackets, we specify the routine we want the function to automate:
-  
-  - `coin = function(tosses = 1) { ... }`
-  
-  
-Pretty simple right? Can we apply this to the loop example above? Let's give it a go.
-
-```{r}
-random_mat = function(
-  n, # number of rows
-  k  # number of columns
-) {
-  
-  # Make empty n x k matrix
-  x = matrix(0, ncol = k, nrow = n)
-  
-  # Have routine pick a random mean per column
-  means = rnorm(n = k)
-  
-  # Have routine pick a random sd per column
-  sds = exp(rnorm(n = k))
-  
-  # Fill the matrix
-  for(i in 1:k){
-    x[,i] = rnorm(n = n, sd = sds[i], means[i])
-  }
-  
-  # Have the function return the filled matrix
-  return(x)
-}
-```
-
-Does it work? Set `n = 10` and `k = 3`:
-
-```{r}
-random_mat(n = 10, k = 3)
-```
-
-It works perfectly. 
-
-Now, how about a dice rolling function?
-
-```{r}
-dice = function(sides = 6, rolls = 1){
-  out = sum(sample(1:sides, replace = T, size = rolls))
-  return(out)
-}
-
-# Test it
-dice(rolls = 10)
-```
-
-```{r}
-outcomes = 0
-for(i in 1:1000){
-  outcomes[i] = dice(rolls = 10)
-}
-plot(density(outcomes))
-```
-
-
-# Practice
-
-
-Now it's your turn. 
-
-  1. Can you finish the function below for a routine that plots the mean number of heads per `1:n` number of tosses? As n gets bigger, the results should converge toward 0.5, but they don't. What do you need to fix in the below function to make it work correctly? Make the change and check the results (hint: the `i`s have it).
-  
+We begin by specifying a `coin_toss` function as follows:
 ```{r, eval = F}
-plot_n_tosses = function(n = 1000){
-  means = 0
-  for(i in 1:n){
-    means[i] = mean(coin(n)=="heads")
-  }
-  plot(1:n,means,type="l",
-       xlab="n tosses",ylab="proportion heads")
-  abline(h=.5)
+coin_toss = function(tosses, bias = 0.5){
+  # ...
 }
-plot_n_tosses()
 ```
+We specify an object `coin_toss` where we use the assignment operator `=` followed by the `function( ... )` command. Within the `function` command we enter `tosses` and `bias = 0.5`. This tells R that we want to create two commands in our `coin_toss` function, (`tosses` and `bias`) and that we want to specify a default value of 0.5 for the `bias` command.
 
-  2. Applying the framework for `plot_n_tosses` in the previous problem, write a function called `plot_n_rolls` that plots the mean value you get going from 1 to n rolls of a die per die (hint: outcome = $\bar{x}/\text{rolls}$.
-  
+Next we need to fill the `{ ... }` with content, which will allow the function to operate:
 ```{r}
-plot_n_rolls = function(n = 1000){
-  means = 0
-  for(i in 1:n){
-    means[i] = mean(dice(rolls = i))/i
-  }
-  plot(1:n,means,type="l",
-       xlab="n rolls",ylab="mean value")
-  abline(h=3.5)
+coin_toss = function(tosses, bias = 0.5){
+  output = rbinom(n = tosses, prob = bias, size = 1)
+  value = rep("heads", len = length(output))
+  value[output == 0] = "tails"
+  return(value)
 }
-plot_n_rolls()
 ```
+In the above, we've returned to our old friend `rbinom`. In our function, we've told R that whatever integer value we input to `tosses` will be the number of times we generate a 0 or 1 value with `rbinom`. Additionally, we've told R that the value we assign to `bias` is the probability of choosing a 1 with `rbinom` (0.5 by default). The output from `rbinom` is assigned to an object `output` within the function. `output` will not be saved to the global environment but will, in essence, only exist within the function itself. With `output` defined as a vector of 0s and 1s, we then create a new object called `value` which we first specify as a vector where each element is the character string `"heads"`. We then use the `[ ]` operator to specify that for each instance where `output` equals 0, we want `value` to be `tails`. Finally, we tell R to return the vector of `"heads"` and `"tails"` contained in the object `value`.
 
-
-  3. You can use the `rbinom` function to generate random 0s and 1s from a binomial distribution. Below is a new coin function that returns heads or tails, but it differs from the previous coin function in that you can specify the probability that you get heads. With this new coin function, write a histogram function that plots the frequency you get a proportion of heads per 100 tosses.
-  
+With our new function in hand, let's take it for a test run. First, notice the error that emerges if we run `coin_toss` without specifying a number of tosses:
 ```{r}
-coin2 = function(tosses = 1, bias = 0.5){
-  out = rbinom(n = tosses, size = 1, prob = bias)
-  out[out==1] = "heads"
-  out[out==0] = "tails"
-  return(out)
-}
-coin2(tosses = 50)
+try(coin_toss())
 ```
+This occurs because there is no default value for tosses, as the error message indicates. We must tell the function the number of times we wish to toss the coin:
+```{r}
+coin_toss(tosses = 5)
+```
+Though we do not need to enter a value for `bias` since by default the function will specify the bias as 0.5, we can override this value when we call the function:
+```{r}
+coin_toss(tosses = 5, bias = .99)
+```
+
+# A More Complicated Example
+The above `coin_toss` function was fairly trivial. The function saves us from rewriting only three lines of code. The real value of functional programming can be more readily seen when the routine we would like to run is more complicated and verbose. As a more complicated example, consider a new `coin_toss` that, in addition to the previous function, lets us specify a certain number of heads at which point we would like the function to terminate. Further, we want this function to print out a message alerting us to this termination if it occurs.
+
+The below code specifies this new routine. It's details have been annotated in the code itself:
+```{r}
+coin_toss = function(
+  tosses = 1,  # Set default number of tosses
+  bias = 0.5,  # Set default bias of coin (values may range from 0 to 1)
+  stop_if=NULL # By default, the function does not stop once a predetermined
+               # number of heads have been tossed.
+  ){
+  # Make empty vector.
+  x = 0
+  
+  # Run this vector through a loop per the number of tosses specified by the user.
+  for(i in 1:tosses){
+    
+    # If we don't care about reaching a certain number of heads:
+    if(is.null(stop_if)){
+      x[i] = rbinom(n = 1, size = 1, prob = bias)
+      
+    # If we do care about reaching a certain number of heads:
+    } else {
+      x[i] = rbinom(n = 1, size = 1, prob = bias)
+      if(sum(x[1:i])==stop_if){
+        print(paste("You have tossed",stop_if, "heads!")) # return message
+        break # break the loop
+      }
+    }
+  }
+  
+  # Set 1 values to read as "heads" and 0s to read as "tails."
+  value = rep("heads", len = length(x))
+  value[x == 0] = "tails"
+  
+  # Return the vector of heads and tails
+  return(value)
+}
+
+# Run default:
+coin_toss()
+
+# Run 5 times:
+coin_toss(tosses = 5)
+
+# Run 200 times, or until we get 5 heads:
+coin_toss(tosses = 200, stop_if = 5)
+```
+
+This function is several times more complex than the previous, which (hopefully) serves to demonstrate the value of functional programming as an addendum to loops. Just as loops simplify our life by automating iterative tasks, functional programming simplifies our life by automating lengthy and complex routines. As a final example, and as an excuse to introduce another function (`sample`), consider the following `dice_roll` function:
 
 ```{r}
-coin_hist = function(times = 100, tosses = 100, bias = 0.5){
-  result = 0
-  for(i in 1:times){
-    result[i] = mean(coin2(tosses = tosses, bias = bias)=="heads")
+dice_roll = function(sides = 6, rolls = 1, dice = 1, snake_eyes = FALSE){
+  value = 0
+  if(snake_eyes == FALSE){
+    for(i in 1:rolls){
+      value[i] = sum(sample(1:sides, replace = T, size = dice))
+    }
+  } else {
+    for(i in 1:rolls){
+      value[i] = sum(sample(1:sides, replace = T, size = dice))
+      if(sum(value[i])==dice){
+          print("Snake eyes!")
+          break
+      }
+    }
   }
-  hist(result,main = paste0("tosses = ",tosses,"; iterations = ",times))
+  return(value)
 }
-coin_hist(bias = .05, times = 1000)
 ```
 
-  
-  
+The above function will by default roll a six-sided die one time. It may, however, be used to a roll a die with any number of sides, for as many rolls as desired. The user may also specify that more than one die may be cast per roll. Further, the option `snake_eyes = TRUE` will tell the function to terminate if you roll a series of straight 1s. If you get "snake eyes", a message is returned to alert you.
+
+Here's an example of the function in action:
+
+```{r}
+dice_roll(rolls = 1000, dice = 2, snake_eyes = T)
+```
+
