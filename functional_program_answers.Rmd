@@ -1,5 +1,5 @@
 ---
-title: Functional Programming with R
+title: Functional Programming with R (Answers Included)
 author: 
   - "Miles D. Williams"
   - "Stephen Mullins"
@@ -162,7 +162,7 @@ The principle of resampling with replacement goes by another name, "bootstrappin
 
   1. Using `sample` create a simpler version of the `dice_roll` function that merely lets you specify the number of sides, the number of dice, and the number of rolls. Set the default values for this function to `sides = 4`, `dice = 2`, and `rolls = 10`. Test this function to see if it works.
   
-```{r, eval = F, echo = F}
+```{r}
 # The answer:
 dice_roll = function(sides = 4, dice = 2, rolls = 10){
   output = 0
@@ -176,7 +176,7 @@ dice_roll()
 
   2. Update this new `dice_roll` function. Rather than return the raw output from the function, have the function return a histogram of the output. 
 
-```{r, eval = F, echo = F}
+```{r}
 dice_roll = function(sides = 4, dice = 2, rolls = 10){
   output = 0
   for(i in 1:rolls){
@@ -188,9 +188,8 @@ dice_roll = function(sides = 4, dice = 2, rolls = 10){
 
   3. Use the updated `dice_roll` function to plot the distribution of values obtained by rolling 1, 2 sided die, 500 times. Play around with the parameters and describe how the distribution of results changes as we increase the sides and the number of dice.
 
-```{r, eval = F, echo = F}
+```{r}
 dice_roll(sides = 2, dice = 1, rolls = 500)
 dice_roll(sides = 6, dice = 1, rolls = 500)
 dice_roll(sides = 6, dice = 6, rolls = 500)
 ```
-
